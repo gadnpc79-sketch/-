@@ -1,0 +1,16 @@
+{
+    "name": "수양동 안전 알림 (안동남)",
+    "short_name": "안동남",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0f172a",
+    "theme_color": "#0f172a",
+    "description": "Geoje-si Suyang-dong Safety Notification System",
+    "icons": [
+        {
+            "src": "icon.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
