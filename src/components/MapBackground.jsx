@@ -99,7 +99,9 @@ const MapBackground = ({ markers = [], viewCoords = null, myCoords = null }) => 
                     },
                     properties: {
                         id: m.id,
-                        message: m.message
+                        message: m.message,
+                        status: m.status,
+                        category: m.category
                     }
                 }))
             };

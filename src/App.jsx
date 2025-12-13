@@ -210,7 +210,7 @@ function App() {
               <h1 className="text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
                 수양동 안전 알림
               </h1>
-              <p className="text-xl font-bold text-white mb-2">안동남</p>
+              <p className="text-xl font-bold text-white mb-2">제작: 안동남</p>
               <p className="text-slate-400 mb-8 text-sm">
                 스마트 위치 기반 민원 송수신 시스템
               </p>
@@ -235,7 +235,7 @@ function App() {
 
               <div className="mt-8 flex items-center justify-center gap-2 text-xs text-slate-500">
                 <Shield size={12} />
-                <span>Geoje-si Suyang-dong 3D Map System</span>
+                <span>거제시 수양동 3D 지도 시스템</span>
               </div>
             </div>
           </motion.div>

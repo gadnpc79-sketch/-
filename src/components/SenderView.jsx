@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, MapPin, Send, MessageSquare, ArrowLeft, RefreshCw, Map as MapIcon } from 'lucide-react';
+import { Camera, MapPin, Send, MessageSquare, ArrowLeft, RefreshCw, Map as MapIcon, Flame, Trash2, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { checkInBounds, SUYANG_CENTER } from '../utils/geofence';
 
@@ -154,14 +154,15 @@ const SenderView = ({ onBack, onSend, onLocate }) => {
 
                     {/* Camera Section */}
 
+
                     {/* Category Selection */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-slate-400">신고 유형 선택 (필수)</label>
                         <div className="grid grid-cols-3 gap-3">
                             {[
-                                { id: 'roadkill', label: '로드킬', icon: '🦌', color: 'bg-red-500/20 border-red-500/50 text-red-400' },
-                                { id: 'trash', label: '쓰레기투기', icon: '🗑️', color: 'bg-orange-500/20 border-orange-500/50 text-orange-400' },
-                                { id: 'fire', label: '산불', icon: '🔥', color: 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400' }
+                                { id: 'roadkill', label: '로드킬', icon: <AlertTriangle size={24} />, color: 'bg-red-500/20 border-red-500/50 text-red-400' },
+                                { id: 'trash', label: '쓰레기투기', icon: <Trash2 size={24} />, color: 'bg-orange-500/20 border-orange-500/50 text-orange-400' },
+                                { id: 'fire', label: '산불', icon: <Flame size={24} />, color: 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400' }
                             ].map((cat) => (
                                 <button
                                     key={cat.id}
@@ -175,7 +176,7 @@ const SenderView = ({ onBack, onSend, onLocate }) => {
                                         }
                                      `}
                                 >
-                                    <span className="text-2xl">{cat.icon}</span>
+                                    <span className="text-xl">{cat.icon}</span>
                                     <span className="text-xs font-bold">{cat.label}</span>
                                 </button>
                             ))}

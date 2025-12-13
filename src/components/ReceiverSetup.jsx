@@ -6,17 +6,18 @@ import { Shield, Smartphone, User, CheckCircle } from 'lucide-react';
 const ReceiverSetup = ({ onComplete }) => {
     const [phone, setPhone] = useState('');
     const [adminId, setAdminId] = useState('');
+    const [name, setName] = useState('');
     const [category, setCategory] = useState(null);
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!phone || !adminId || !category) {
+        if (!phone || !adminId || !category || !name) {
             alert('모든 정보를 입력해주세요.');
             return;
         }
 
         // Save to localStorage
-        const profile = { phone, adminId, category };
+        const profile = { phone, adminId, category, name };
         localStorage.setItem('suyang_receiver_profile', JSON.stringify(profile));
 
         onComplete(profile);
@@ -38,7 +39,21 @@ const ReceiverSetup = ({ onComplete }) => {
                     <p className="text-slate-400 text-sm">최초 접속 설정이 필요합니다.</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-400 mb-2">이름</label>
+                        <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="관리자 실명 입력"
+                                className="w-full bg-slate-900 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 placeholder:text-slate-600"
+                            />
+                        </div>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-slate-400 mb-2">휴대폰 번호</label>
                         <div className="relative">
@@ -71,7 +86,7 @@ const ReceiverSetup = ({ onComplete }) => {
                         <label className="block text-sm font-medium text-slate-400 mb-2">수신 카테고리 (담당)</label>
                         <div className="grid grid-cols-3 gap-2">
                             {[
-                                { id: 'roadkill', label: '로드킬', icon: '🦌' },
+                                { id: 'roadkill', label: '로드킬', icon: '⚠️' },
                                 { id: 'trash', label: '쓰레기투기', icon: '🗑️' },
                                 { id: 'fire', label: '산불', icon: '🔥' }
                             ].map((cat) => (

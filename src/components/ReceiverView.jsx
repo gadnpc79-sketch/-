@@ -1,13 +1,15 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckSquare, Square, MapPin, Send, X, Map, Trash2, Database, List, Activity } from 'lucide-react';
+import { CheckSquare, Square, MapPin, Send, X, Map, Trash2, Database, List, CheckCircle, Inbox, Circle, AlertTriangle, Flame } from 'lucide-react';
 import ComplaintTable from './ComplaintTable';
 import { supabase } from '../supabaseClient';
 
 const ReceiverView = ({ complaints, profile, onBack, onBroadcast, onDelete }) => {
+    /* ... state ... */
     const [selectedIds, setSelectedIds] = useState([]);
     const [viewMode, setViewMode] = useState('list'); // 'list' | 'database'
+
+    /* ... functions ... */
 
     const toggleSelect = (id) => {
         setSelectedIds(prev =>
@@ -24,11 +26,23 @@ const ReceiverView = ({ complaints, profile, onBack, onBroadcast, onDelete }) =>
     };
 
     const openGoogleMaps = (e, coords) => {
-        e.stopPropagation(); // Prevent row selection
+        e.stopPropagation();
         if (!coords) return;
         const [lng, lat] = coords;
         const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
         window.open(url, '_blank');
+    };
+
+    const handleStatusUpdate = async (e, id, newStatus) => {
+        e.stopPropagation();
+        await supabase.from('complaints').update({ status: newStatus }).eq('id', id);
+    };
+
+    const getCategoryLabel = (cat) => {
+        if (cat === 'roadkill') return '로드킬';
+        if (cat === 'trash') return '쓰레기투기';
+        if (cat === 'fire') return '산불';
+        return cat;
     };
 
     return (
@@ -45,8 +59,11 @@ const ReceiverView = ({ complaints, profile, onBack, onBroadcast, onDelete }) =>
                         관리자 대시보드
                         {profile && <span className="text-xs bg-blue-600 px-2 py-1 rounded text-white">{profile.adminId}</span>}
                     </h2>
-                    <p className="text-sm text-slate-400">수신된 민원 관리 {profile && `(${profile.category})`}</p>
+                    <p className="text-sm text-slate-400">
+                        {profile?.name ? `${profile.name}님` : '관리자'} | {getCategoryLabel(profile?.category)} 담당
+                    </p>
                 </div>
+                {/* ... buttons ... */}
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setViewMode(viewMode === 'list' ? 'database' : 'list')}
@@ -121,27 +138,30 @@ const ReceiverView = ({ complaints, profile, onBack, onBroadcast, onDelete }) =>
                                                 <span className="text-xs font-mono text-slate-500">
                                                     {new Date(complaint.created_at || complaint.timestamp).toLocaleTimeString()}
                                                 </span>
-                                                {/* Status Badge */}
-                                                <select
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    value={complaint.status || 'none'}
-                                                    onChange={async (e) => {
-                                                        const newStatus = e.target.value;
-                                                        await supabase.from('complaints').update({ status: newStatus }).eq('id', complaint.id);
-                                                    }}
-                                                    className={`
-                                                        text-xs font-bold px-2 py-0.5 rounded border-none outline-none cursor-pointer
-                                                        ${complaint.status === 'received' ? 'bg-green-500/20 text-green-400' :
-                                                            complaint.status === 'dispatched' ? 'bg-blue-500/20 text-blue-400' :
-                                                                complaint.status === 'completed' ? 'bg-slate-500/20 text-slate-400 line-through' :
-                                                                    'bg-slate-700 text-slate-400'}
-                                                    `}
-                                                >
-                                                    <option value="none">대기</option>
-                                                    <option value="received">접수</option>
-                                                    <option value="dispatched">출동</option>
-                                                    <option value="completed">완료</option>
-                                                </select>
+                                                {/* Status Icons */}
+                                                <div className="flex bg-slate-900 rounded-lg p-0.5 border border-white/5">
+                                                    <button
+                                                        onClick={(e) => handleStatusUpdate(e, complaint.id, 'none')}
+                                                        className={`p-1 rounded ${!complaint.status || complaint.status === 'none' ? 'bg-slate-700 text-slate-300' : 'text-slate-600 hover:text-slate-400'}`}
+                                                        title="대기"
+                                                    >
+                                                        <Circle size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => handleStatusUpdate(e, complaint.id, 'received')}
+                                                        className={`p-1 rounded ${complaint.status === 'received' ? 'bg-blue-500/20 text-blue-400' : 'text-slate-600 hover:text-blue-400'}`}
+                                                        title="접수"
+                                                    >
+                                                        <Inbox size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => handleStatusUpdate(e, complaint.id, 'completed')}
+                                                        className={`p-1 rounded ${complaint.status === 'completed' ? 'bg-green-500/20 text-green-400' : 'text-slate-600 hover:text-green-400'}`}
+                                                        title="완료"
+                                                    >
+                                                        <CheckCircle size={14} />
+                                                    </button>
+                                                </div>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <button
@@ -188,7 +208,7 @@ const ReceiverView = ({ complaints, profile, onBack, onBroadcast, onDelete }) =>
                                                         className="absolute inset-0 w-full h-full"
                                                     />
                                                     <div className="absolute bottom-1 right-1 pointer-events-none">
-                                                        <div className="bg-white/80 text-black text-[10px] px-1 rounded">Google Map Capture</div>
+                                                        <div className="bg-white/80 text-black text-[10px] px-1 rounded">구글 지도 캡처</div>
                                                     </div>
                                                 </div>
                                             )}
