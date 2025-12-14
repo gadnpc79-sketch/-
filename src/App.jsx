@@ -45,7 +45,13 @@ function App() {
       } else {
         // Filter based on category if profile exists
         const filtered = receiverProfile
-          ? (data || []).filter(c => c.category === receiverProfile.category)
+          ? (data || []).filter(c => {
+            // Support both old (single category) and new (categories array) formats
+            if (receiverProfile.categories && Array.isArray(receiverProfile.categories)) {
+              return receiverProfile.categories.includes(c.category);
+            }
+            return c.category === receiverProfile.category;
+          })
           : (data || []);
         setComplaints(filtered);
       }
@@ -210,7 +216,7 @@ function App() {
               <h1 className="text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
                 수양동 안전 알림
               </h1>
-              <p className="text-xl font-bold text-white mb-2">제작: 안동남</p>
+              <p className="text-xl font-bold text-white mb-2">제작자 : 안동남</p>
               <p className="text-slate-400 mb-8 text-sm">
                 스마트 위치 기반 민원 송수신 시스템
               </p>

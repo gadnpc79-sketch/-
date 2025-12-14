@@ -38,11 +38,25 @@ const ReceiverView = ({ complaints, profile, onBack, onBroadcast, onDelete }) =>
         await supabase.from('complaints').update({ status: newStatus }).eq('id', id);
     };
 
-    const getCategoryLabel = (cat) => {
-        if (cat === 'roadkill') return '로드킬';
-        if (cat === 'trash') return '쓰레기투기';
-        if (cat === 'fire') return '산불';
-        return cat;
+    const getCategoryLabel = (cats) => {
+        if (!cats) return '전체';
+
+        // Handle array
+        if (Array.isArray(cats)) {
+            if (cats.length === 3) return '전체'; // All selected
+            return cats.map(c => {
+                if (c === 'roadkill') return '로드킬';
+                if (c === 'trash') return '쓰레기투기';
+                if (c === 'fire') return '산불';
+                return c;
+            }).join(', ');
+        }
+
+        // Handle string (legacy)
+        if (cats === 'roadkill') return '로드킬';
+        if (cats === 'trash') return '쓰레기투기';
+        if (cats === 'fire') return '산불';
+        return cats;
     };
 
     return (
@@ -60,7 +74,7 @@ const ReceiverView = ({ complaints, profile, onBack, onBroadcast, onDelete }) =>
                         {profile && <span className="text-xs bg-blue-600 px-2 py-1 rounded text-white">{profile.adminId}</span>}
                     </h2>
                     <p className="text-sm text-slate-400">
-                        {profile?.name ? `${profile.name}님` : '관리자'} | {getCategoryLabel(profile?.category)} 담당
+                        {profile?.name ? `${profile.name}님` : '관리자'} | {getCategoryLabel(profile?.categories || profile?.category)} 담당
                     </p>
                 </div>
                 {/* ... buttons ... */}

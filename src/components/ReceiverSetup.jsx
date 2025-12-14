@@ -7,17 +7,17 @@ const ReceiverSetup = ({ onComplete }) => {
     const [phone, setPhone] = useState('');
     const [adminId, setAdminId] = useState('');
     const [name, setName] = useState('');
-    const [category, setCategory] = useState(null);
+    const [categories, setCategories] = useState([]); // Changed to array
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!phone || !adminId || !category || !name) {
-            alert('모든 정보를 입력해주세요.');
+        if (!phone || !adminId || categories.length === 0 || !name) {
+            alert('모든 정보를 입력하고 최소 하나의 카테고리를 선택해주세요.');
             return;
         }
 
         // Save to localStorage
-        const profile = { phone, adminId, category, name };
+        const profile = { phone, adminId, categories, name }; // Save categories array
         localStorage.setItem('suyang_receiver_profile', JSON.stringify(profile));
 
         onComplete(profile);
@@ -83,7 +83,7 @@ const ReceiverSetup = ({ onComplete }) => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-2">수신 카테고리 (담당)</label>
+                        <label className="block text-sm font-medium text-slate-400 mb-2">수신 카테고리 (복수 선택 가능)</label>
                         <div className="grid grid-cols-3 gap-2">
                             {[
                                 { id: 'roadkill', label: '로드킬', icon: '⚠️' },
@@ -93,10 +93,16 @@ const ReceiverSetup = ({ onComplete }) => {
                                 <button
                                     key={cat.id}
                                     type="button"
-                                    onClick={() => setCategory(cat.id)}
+                                    onClick={() => {
+                                        setCategories(prev =>
+                                            prev.includes(cat.id)
+                                                ? prev.filter(c => c !== cat.id)
+                                                : [...prev, cat.id]
+                                        );
+                                    }}
                                     className={`
                                         p-3 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all
-                                        ${category === cat.id
+                                        ${categories.includes(cat.id)
                                             ? 'bg-blue-600 border-blue-400 text-white'
                                             : 'bg-slate-900 border-white/5 text-slate-400 hover:bg-slate-700'
                                         }
@@ -106,6 +112,15 @@ const ReceiverSetup = ({ onComplete }) => {
                                     <span className="text-xs font-bold">{cat.label}</span>
                                 </button>
                             ))}
+                        </div>
+                        <div className="mt-2 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setCategories(['roadkill', 'trash', 'fire'])}
+                                className="text-xs text-blue-400 hover:text-blue-300 underline"
+                            >
+                                전체 선택
+                            </button>
                         </div>
                     </div>
 
