@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckSquare, Square, MapPin, Send, X, Map, Trash2, Database, List, CheckCircle, Inbox, Circle, AlertTriangle, Flame } from 'lucide-react';
+import { CheckSquare, Square, MapPin, Send, X, Map, Trash2, Database, List, CheckCircle, Inbox, Circle, AlertTriangle, Flame, Loader } from 'lucide-react';
 import ComplaintTable from './ComplaintTable';
 import { supabase } from '../supabaseClient';
 
@@ -120,127 +120,126 @@ const ReceiverView = ({ complaints, profile, onBack, onBroadcast, onDelete }) =>
             ) : (
                 /* List View */
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                    {complaints.length === 0 ? (
+                    {complaints.filter(c => !c.is_archived).length === 0 ? (
                         <div className="text-center py-10 text-slate-500">
                             수신된 민원이 없습니다.
                         </div>
                     ) : (
-                        complaints.map(complaint => (
-                            <div
-                                key={complaint.id}
-                                className={`
+                        complaints
+                            .filter(c => !c.is_archived) // Hide archived in list view
+                            .map(complaint => (
+                                <div
+                                    key={complaint.id}
+                                    className={`
                     relative group rounded-xl border p-4 transition-all
                     ${selectedIds.includes(complaint.id)
-                                        ? 'bg-blue-500/10 border-blue-500/50'
-                                        : 'bg-slate-800/30 border-white/5 hover:bg-slate-800/50'}
+                                            ? 'bg-blue-500/10 border-blue-500/50'
+                                            : 'bg-slate-800/30 border-white/5 hover:bg-slate-800/50'}
                   `}
-                            >
-                                <div className="flex gap-4">
-                                    {/* Checkbox */}
-                                    <div className="mt-1" onClick={() => toggleSelect(complaint.id)}>
-                                        {selectedIds.includes(complaint.id) ? (
-                                            <CheckSquare size={20} className="text-blue-500 cursor-pointer" />
-                                        ) : (
-                                            <Square size={20} className="text-slate-600 group-hover:text-slate-400 cursor-pointer" />
-                                        )}
-                                    </div>
+                                >
+                                    <div className="flex gap-4">
+                                        {/* Checkbox */}
+                                        <div className="mt-1" onClick={() => toggleSelect(complaint.id)}>
+                                            {selectedIds.includes(complaint.id) ? (
+                                                <CheckSquare size={20} className="text-blue-500 cursor-pointer" />
+                                            ) : (
+                                                <Square size={20} className="text-slate-600 group-hover:text-slate-400 cursor-pointer" />
+                                            )}
+                                        </div>
 
-                                    {/* Content */}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs font-mono text-slate-500">
-                                                    {new Date(complaint.created_at || complaint.timestamp).toLocaleTimeString()}
-                                                </span>
-                                                {/* Status Icons */}
-                                                <div className="flex bg-slate-900 rounded-lg p-0.5 border border-white/5">
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-mono text-slate-500">
+                                                        {new Date(complaint.created_at || complaint.timestamp).toLocaleTimeString()}
+                                                    </span>
+                                                    {/* Status Icons -> Korean Text Buttons */}
+                                                    <div className="flex bg-slate-900 rounded-lg p-0.5 border border-white/5 gap-0.5">
+                                                        <button
+                                                            onClick={(e) => handleStatusUpdate(e, complaint.id, 'received')}
+                                                            className={`px-2 py-1 text-xs font-bold rounded ${complaint.status === 'received' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-800'}`}
+                                                        >
+                                                            접수
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => handleStatusUpdate(e, complaint.id, 'processing')}
+                                                            className={`px-2 py-1 text-xs font-bold rounded ${complaint.status === 'processing' ? 'bg-yellow-600 text-white' : 'text-slate-500 hover:bg-slate-800'}`}
+                                                        >
+                                                            처리중
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => handleStatusUpdate(e, complaint.id, 'completed')}
+                                                            className={`px-2 py-1 text-xs font-bold rounded ${complaint.status === 'completed' ? 'bg-green-600 text-white' : 'text-slate-500 hover:bg-slate-800'}`}
+                                                        >
+                                                            완료
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
                                                     <button
-                                                        onClick={(e) => handleStatusUpdate(e, complaint.id, 'none')}
-                                                        className={`p-1 rounded ${!complaint.status || complaint.status === 'none' ? 'bg-slate-700 text-slate-300' : 'text-slate-600 hover:text-slate-400'}`}
-                                                        title="대기"
+                                                        onClick={(e) => { e.stopPropagation(); onDelete([complaint.id]); }}
+                                                        className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors z-10"
+                                                        title="삭제"
                                                     >
-                                                        <Circle size={14} />
+                                                        <Trash2 size={14} />
                                                     </button>
                                                     <button
-                                                        onClick={(e) => handleStatusUpdate(e, complaint.id, 'received')}
-                                                        className={`p-1 rounded ${complaint.status === 'received' ? 'bg-blue-500/20 text-blue-400' : 'text-slate-600 hover:text-blue-400'}`}
-                                                        title="접수"
+                                                        onClick={(e) => openGoogleMaps(e, complaint.coords)}
+                                                        className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-green-600/20 text-green-400 border border-green-600/30 hover:bg-green-600/30 transition-colors z-10"
+                                                        title="구글 지도에서 위치 보기"
                                                     >
-                                                        <Inbox size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => handleStatusUpdate(e, complaint.id, 'completed')}
-                                                        className={`p-1 rounded ${complaint.status === 'completed' ? 'bg-green-500/20 text-green-400' : 'text-slate-600 hover:text-green-400'}`}
-                                                        title="완료"
-                                                    >
-                                                        <CheckCircle size={14} />
+                                                        <Map size={10} />
+                                                        지도
                                                     </button>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); onDelete([complaint.id]); }}
-                                                    className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors z-10"
-                                                    title="삭제"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={(e) => openGoogleMaps(e, complaint.coords)}
-                                                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-green-600/20 text-green-400 border border-green-600/30 hover:bg-green-600/30 transition-colors z-10"
-                                                    title="구글 지도에서 위치 보기"
-                                                >
-                                                    <Map size={10} />
-                                                    지도
-                                                </button>
+
+                                            <p className="text-slate-200 text-sm line-clamp-3 mb-3 whitespace-pre-wrap">
+                                                {complaint.message}
+                                            </p>
+
+                                            {/* Location Info & Map */}
+                                            <div className="mb-3 bg-slate-900/50 rounded-lg p-2 border border-white/5">
+                                                <div className="flex items-center gap-2 mb-2 text-slate-300">
+                                                    <MapPin size={14} className="text-blue-400 shrink-0" />
+                                                    <span className="text-xs font-medium">{complaint.location}</span>
+                                                </div>
+
+                                                {/* Inline Map */}
+                                                {complaint.coords && (
+                                                    <div className="relative w-full h-48 rounded-lg overflow-hidden border border-white/10 bg-slate-800">
+                                                        <iframe
+                                                            title={`Map for ${complaint.id}`}
+                                                            width="100%"
+                                                            height="100%"
+                                                            frameBorder="0"
+                                                            scrolling="no"
+                                                            marginHeight="0"
+                                                            marginWidth="0"
+                                                            src={`https://maps.google.com/maps?q=${complaint.coords[1]},${complaint.coords[0]}&z=15&output=embed`}
+                                                            className="absolute inset-0 w-full h-full"
+                                                        />
+                                                        <div className="absolute bottom-1 right-1 pointer-events-none">
+                                                            <div className="bg-white/80 text-black text-[10px] px-1 rounded">구글 지도 캡처</div>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
 
-                                        <p className="text-slate-200 text-sm line-clamp-3 mb-3 whitespace-pre-wrap">
-                                            {complaint.message}
-                                        </p>
-
-                                        {/* Location Info & Map */}
-                                        <div className="mb-3 bg-slate-900/50 rounded-lg p-2 border border-white/5">
-                                            <div className="flex items-center gap-2 mb-2 text-slate-300">
-                                                <MapPin size={14} className="text-blue-400 shrink-0" />
-                                                <span className="text-xs font-medium">{complaint.location}</span>
-                                            </div>
-
-                                            {/* Inline Map */}
-                                            {complaint.coords && (
-                                                <div className="relative w-full h-48 rounded-lg overflow-hidden border border-white/10 bg-slate-800">
-                                                    <iframe
-                                                        title={`Map for ${complaint.id}`}
-                                                        width="100%"
-                                                        height="100%"
-                                                        frameBorder="0"
-                                                        scrolling="no"
-                                                        marginHeight="0"
-                                                        marginWidth="0"
-                                                        src={`https://maps.google.com/maps?q=${complaint.coords[1]},${complaint.coords[0]}&z=15&output=embed`}
-                                                        className="absolute inset-0 w-full h-full"
-                                                    />
-                                                    <div className="absolute bottom-1 right-1 pointer-events-none">
-                                                        <div className="bg-white/80 text-black text-[10px] px-1 rounded">구글 지도 캡처</div>
+                                            {/* Photo */}
+                                            {complaint.photo && (
+                                                <div className="mt-3">
+                                                    <p className="text-xs text-slate-500 mb-1">첨부 사진</p>
+                                                    <div className="h-40 w-full rounded-lg bg-slate-800 overflow-hidden border border-white/10">
+                                                        <img src={complaint.photo} alt="Attached" className="h-full w-full object-cover" />
                                                     </div>
                                                 </div>
                                             )}
                                         </div>
-
-                                        {/* Photo */}
-                                        {complaint.photo && (
-                                            <div className="mt-3">
-                                                <p className="text-xs text-slate-500 mb-1">첨부 사진</p>
-                                                <div className="h-40 w-full rounded-lg bg-slate-800 overflow-hidden border border-white/10">
-                                                    <img src={complaint.photo} alt="Attached" className="h-full w-full object-cover" />
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
-                            </div>
-                        ))
+                            ))
                     )}
                 </div>
             )}
